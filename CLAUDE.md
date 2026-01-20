@@ -42,11 +42,12 @@
 ```
 yasashii_terminal/
 ├── CLAUDE.md                    # このファイル（ルートエージェント）
-├── agents/                      # サブエージェント定義
-│   ├── main-process.md          # Mainプロセス担当
-│   ├── renderer-ui.md           # Renderer/UI担当
-│   ├── shared-types.md          # 共有型定義担当
-│   └── quality-assurance.md     # テスト・品質担当
+├── .claude/                     # Claude設定・サブエージェント定義
+│   └── agents/
+│       ├── dev-coordinator.md       # 開発コーディネーター（タスク振り分け・進捗管理）
+│       ├── main-process-developer.md # Mainプロセス開発担当
+│       ├── renderer-ui-reviewer.md   # Renderer/UIレビュー担当
+│       └── shared-types-guardian.md  # 共有型定義担当
 ├── app/
 │   ├── main/                    # Electronメインプロセス
 │   │   ├── main.ts
@@ -92,15 +93,38 @@ yasashii_terminal/
 
 タスクの内容に応じて、適切なサブエージェントを参照してください。
 
+### 開発コーディネーター
+複数のエージェントが関わる複雑なタスクや、プロジェクト全体の進捗管理が必要な場合は、まず開発コーディネーターに相談してください。
+
 | タスク内容 | 参照するサブエージェント |
 |-----------|------------------------|
-| `app/main/` 配下のコード | [agents/main-process.md](agents/main-process.md) |
-| IPCハンドラー、コマンドパーサー、ランナー | [agents/main-process.md](agents/main-process.md) |
-| `app/renderer/` 配下のコード | [agents/renderer-ui.md](agents/renderer-ui.md) |
-| Reactコンポーネント、Monaco、xterm.js | [agents/renderer-ui.md](agents/renderer-ui.md) |
-| `app/shared/` 配下のコード | [agents/shared-types.md](agents/shared-types.md) |
-| 型定義、IPCチャンネル定義 | [agents/shared-types.md](agents/shared-types.md) |
-| テストコード、Lint設定 | [agents/quality-assurance.md](agents/quality-assurance.md) |
+| 複数プロセスにまたがる機能実装 | [.claude/agents/dev-coordinator.md](.claude/agents/dev-coordinator.md) |
+| タスクの振り分け・進捗確認 | [.claude/agents/dev-coordinator.md](.claude/agents/dev-coordinator.md) |
+| アーキテクチャ整合性の確認 | [.claude/agents/dev-coordinator.md](.claude/agents/dev-coordinator.md) |
+
+### Mainプロセス開発
+| タスク内容 | 参照するサブエージェント |
+|-----------|------------------------|
+| `app/main/` 配下のコード | [.claude/agents/main-process-developer.md](.claude/agents/main-process-developer.md) |
+| IPCハンドラー実装 | [.claude/agents/main-process-developer.md](.claude/agents/main-process-developer.md) |
+| CLI実行（ai-runner, shell-runner） | [.claude/agents/main-process-developer.md](.claude/agents/main-process-developer.md) |
+| コマンドパーサー・エイリアス解決 | [.claude/agents/main-process-developer.md](.claude/agents/main-process-developer.md) |
+| electron-store永続化 | [.claude/agents/main-process-developer.md](.claude/agents/main-process-developer.md) |
+
+### Renderer/UIレビュー
+| タスク内容 | 参照するサブエージェント |
+|-----------|------------------------|
+| `app/renderer/` 配下のコード | [.claude/agents/renderer-ui-reviewer.md](.claude/agents/renderer-ui-reviewer.md) |
+| Reactコンポーネント、Monaco、xterm.js | [.claude/agents/renderer-ui-reviewer.md](.claude/agents/renderer-ui-reviewer.md) |
+| UI/UXレビュー・品質検査 | [.claude/agents/renderer-ui-reviewer.md](.claude/agents/renderer-ui-reviewer.md) |
+| レイアウト・レスポンシブ対応 | [.claude/agents/renderer-ui-reviewer.md](.claude/agents/renderer-ui-reviewer.md) |
+
+### 共有型定義
+| タスク内容 | 参照するサブエージェント |
+|-----------|------------------------|
+| `app/shared/` 配下のコード | [.claude/agents/shared-types-guardian.md](.claude/agents/shared-types-guardian.md) |
+| 型定義、IPCチャンネル定義 | [.claude/agents/shared-types-guardian.md](.claude/agents/shared-types-guardian.md) |
+| Main↔Renderer間の型契約 | [.claude/agents/shared-types-guardian.md](.claude/agents/shared-types-guardian.md) |
 
 ---
 
@@ -209,9 +233,42 @@ const mainWindow = new BrowserWindow({
 
 ## 開発フロー
 
-1. **型定義を先行** - `shared-types.md` を参照し、IPC型を確定
-2. **並列開発** - Main と Renderer を独立して開発可能
-3. **結合テスト** - IPC通信の結合後に E2E テスト実施
+1. **型定義を先行** - `shared-types-guardian` エージェントを使用してIPC型を確定
+2. **タスク振り分け** - 複雑なタスクは `dev-coordinator` エージェントがサブエージェントに振り分け
+3. **並列開発** - `main-process-developer` と `renderer-ui-reviewer` が独立して開発・レビュー
+4. **結合テスト** - IPC通信の結合後に E2E テスト実施
+
+### 並列実行オーケストレーション
+
+`dev-coordinator` エージェントは、Claude Code CLIのTask機能を活用してサブエージェントを並列実行します。
+
+#### 実行フロー
+
+```
+ユーザーリクエスト
+    ↓
+dev-coordinator: 要件分析・タスク分解
+    ↓
+Phase 2: 型定義（直列実行）
+    → shared-types-guardian: 型定義作成
+    → 完了レポート待ち
+    ↓
+Phase 3: 実装（並列実行）
+    ├─→ main-process-developer: Main実装
+    └─→ renderer-ui-reviewer: Renderer実装
+    → 両方の完了レポート待ち
+    ↓
+Phase 4: 統合レビュー
+    → dev-coordinator: 統合レビュー・最終報告
+```
+
+#### 依存関係
+
+- **型定義**は実装の前に完了必須（直列実行）
+- **Main実装**と**Renderer実装**は型定義完了後、並列実行可能
+- **統合レビュー**は両方の実装完了後に実施
+
+詳細は [.claude/agents/dev-coordinator.md](.claude/agents/dev-coordinator.md) の「Parallel Execution Protocol」セクションを参照してください。
 
 ---
 
