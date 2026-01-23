@@ -1,0 +1,10 @@
+# Multi-agent tmux runtime artifacts
+.ai-team/multiagent/tmp/
+.ai-team/multiagent/logs/
+
+# Claude Code local-only settings
+.claude/settings.local.json
+
+# This folder is a vendored reference copy (not part of this repo)
+Claude-Code-Communication-main/
+
