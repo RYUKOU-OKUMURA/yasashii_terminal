@@ -1,0 +1,131 @@
+/* app/renderer/styles/globals.css */
+
+:root {
+  /* カラーテーマ: ダークモード */
+  --color-bg-primary: #1e1e1e;
+  --color-bg-secondary: #252526;
+  --color-bg-tertiary: #333333;
+  --color-text-primary: #d4d4d4;
+  --color-text-secondary: #858585;
+  --color-accent: #0e639c;
+  --color-border: #3c3c3c;
+
+  /* スペーシング */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+
+  /* 角丸 */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* フォント */
+  --font-family-mono: 'Menlo', 'Monaco', 'Courier New', monospace;
+  --font-family-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family-sans);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* スクロールバー */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg-secondary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-sm);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+/* 3ペインレイアウト */
+.app-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+}
+
+.pane-output {
+  flex: 4;
+  min-height: 100px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.pane-editor {
+  flex: 4;
+  min-height: 100px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.pane-commandbar {
+  flex: 2;
+  min-height: 80px;
+  overflow: hidden;
+  padding: var(--spacing-md);
+}
+
+/* Monaco Editor */
+.monaco-editor-wrapper {
+  width: 100%;
+  height: 100%;
+}
+
+/* xterm.js */
+.xterm-output {
+  width: 100%;
+  height: 100%;
+  padding: var(--spacing-sm);
+}
+
+/* コマンドバー */
+.commandbar-placeholder {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.commandbar-placeholder input {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-mono);
+  font-size: 14px;
+}
+
+.commandbar-placeholder input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.conversion-preview {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-md);
+  font-family: var(--font-family-mono);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}

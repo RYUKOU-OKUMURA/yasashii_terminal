@@ -7,17 +7,19 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 usage() {
   cat << EOF
 Usage:
-  $0 [--cmd "<command>"] [--attach president|multiagent|none]
+  $0 [--cmd "<command>"] [--attach president|multiagent|none] [--no-bootstrap] [--bootstrap-delay <seconds>]
 
 Examples:
   $0
-  $0 --cmd "codex"
   $0 --attach multiagent
+  $0 --no-bootstrap
 EOF
 }
 
 AGENT_CMD="${AGENT_CMD:-claude --dangerously-skip-permissions}"
 ATTACH="president"
+BOOTSTRAP=true
+BOOTSTRAP_DELAY="2"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -37,6 +39,18 @@ while [[ $# -gt 0 ]]; do
       ATTACH="$2"
       shift 2
       ;;
+    --no-bootstrap)
+      BOOTSTRAP=false
+      shift
+      ;;
+    --bootstrap-delay)
+      if [[ $# -lt 2 ]]; then
+        echo "❌ --bootstrap-delay requires an argument"
+        exit 2
+      fi
+      BOOTSTRAP_DELAY="$2"
+      shift 2
+      ;;
     -h|--help)
       usage
       exit 0
@@ -52,6 +66,10 @@ done
 "$SCRIPT_DIR/setup.sh"
 
 AGENT_CMD="$AGENT_CMD" "$SCRIPT_DIR/launch-agents.sh" --yes
+
+if [[ "$BOOTSTRAP" = true ]]; then
+  "$SCRIPT_DIR/bootstrap.sh" --delay "$BOOTSTRAP_DELAY" || true
+fi
 
 case "$ATTACH" in
   president)
@@ -70,4 +88,3 @@ case "$ATTACH" in
     exit 2
     ;;
 esac
-

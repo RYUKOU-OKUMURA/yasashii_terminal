@@ -1,0 +1,49 @@
+{
+  "name": "yasashii-terminal",
+  "version": "0.1.0",
+  "description": "AI CLIを日本語で直感的に操作できるElectronベースのデスクトップアプリケーション",
+  "main": "dist-electron/main/main.js",
+  "author": "mulch-team",
+  "license": "MIT",
+  "scripts": {
+    "dev": "npm run dev:renderer & npm run dev:electron",
+    "dev:renderer": "vite",
+    "dev:electron": "tsc -p tsconfig.electron.json && NODE_ENV=development electron dist-electron/main/main.js --inspect",
+    "build": "npm run build:renderer && npm run build:electron",
+    "build:renderer": "vite build",
+    "build:electron": "tsc -p tsconfig.electron.json",
+    "preview": "vite preview",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/xterm": "^5.5.0",
+    "electron-store": "^10.0.0",
+    "execa": "^9.5.2",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "zustand": "^5.0.2"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@playwright/test": "^1.50.1",
+    "@types/node": "^22.13.5",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^34.2.0",
+    "electron-builder": "^25.1.8",
+    "monaco-editor": "^0.52.0",
+    "@monaco-editor/react": "^4.6.0",
+    "node-pty": "^1.1.0",
+    "typescript": "^5.7.3",
+    "vite": "^6.2.1",
+    "vite-plugin-electron": "^0.29.0",
+    "vitest": "^3.0.7"
+  }
+}

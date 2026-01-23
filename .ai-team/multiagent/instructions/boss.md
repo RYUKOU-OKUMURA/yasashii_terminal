@@ -23,6 +23,11 @@
 ./.ai-team/multiagent/agent-send.sh worker3 "..."
 ```
 
+## 起動直後のルール（重要）
+
+- **presidentから具体的な依頼が来るまでは、勝手に開発を開始せず待機**してください。
+- 自動でやってよいのは「挨拶」「通信確認（ping）」程度です。
+
 ## 完了フラグ（任意）
 
 workerが完了時に以下を作る運用にできます:
@@ -32,4 +37,3 @@ touch ./.ai-team/multiagent/tmp/worker1_done.txt
 touch ./.ai-team/multiagent/tmp/worker2_done.txt
 touch ./.ai-team/multiagent/tmp/worker3_done.txt
 ```
-

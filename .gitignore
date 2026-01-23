@@ -8,3 +8,57 @@
 # This folder is a vendored reference copy (not part of this repo)
 Claude-Code-Communication-main/
 
+# Dependencies
+node_modules/
+
+# Build artifacts
+dist/
+dist-electron/
+
+# TypeScript incremental build info
+*.tsbuildinfo
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# System files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor / IDE settings
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing
+coverage/
+
+# Cache
+.cache/
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Temporary documents
+プロジェクト評価会議_議事録.md
+成功可能性評価レポート.md
+
+# Untitled / temp files
+Untitled
