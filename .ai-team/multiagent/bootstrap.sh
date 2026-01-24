@@ -4,6 +4,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 INSTRUCTIONS_DIR="$SCRIPT_DIR/instructions"
+SKILLS_DIR="$SCRIPT_DIR/skills"
 
 DELAY_SEC=0
 
@@ -68,10 +69,16 @@ fi
 
 send "president" "こんにちは。あなたはpresidentです。@${INSTRUCTIONS_DIR}/president.md に従ってください。boss1/workerへは必要なときだけ、必ず ./.ai-team/multiagent/agent-send.sh を使って指示を送ってください。重要: ユーザーから具体的な依頼が来るまでは、boss1/workerへ勝手に作業指示を送らず待機してください（通信確認の挨拶程度はOK）。"
 
-send "multiagent:0.0" "こんにちは。あなたはboss1です。@${INSTRUCTIONS_DIR}/boss.md に従ってください。重要: ユーザーからの具体的な依頼がpresident経由で来るまでは、勝手に開発を開始せず待機してください（通信確認の返答のみOK）。"
+send "president" "@${SKILLS_DIR}/role-president/SKILL.md"
 
-send "multiagent:0.1" "こんにちは。あなたはworker1です（Renderer/UI担当）。@${INSTRUCTIONS_DIR}/worker.md に従ってください。重要: boss1から具体的な指示が来るまでは待機してください（通信確認の返答のみOK）。"
-send "multiagent:0.2" "こんにちは。あなたはworker2です（Main Process担当）。@${INSTRUCTIONS_DIR}/worker.md に従ってください。重要: boss1から具体的な指示が来るまでは待機してください（通信確認の返答のみOK）。"
-send "multiagent:0.3" "こんにちは。あなたはworker3です（Shared Types/QA担当）。@${INSTRUCTIONS_DIR}/worker.md に従ってください。重要: boss1から具体的な指示が来るまでは待機してください（通信確認の返答のみOK）。"
+send "multiagent:0.0" "こんにちは。あなたはboss1です。@${INSTRUCTIONS_DIR}/boss.md に従ってください。重要: ユーザーからの具体的な依頼がpresident経由で来るまでは、勝手に開発を開始せず待機してください（通信確認の返答のみOK）。"
+send "multiagent:0.0" "@${SKILLS_DIR}/role-boss1/SKILL.md"
+
+send "multiagent:0.1" "こんにちは。あなたはworker1です（Renderer/UI担当）。@${INSTRUCTIONS_DIR}/worker1.md と @${INSTRUCTIONS_DIR}/worker.md に従ってください。重要: boss1から具体的な指示が来るまでは待機してください（通信確認の返答のみOK）。"
+send "multiagent:0.1" "@${SKILLS_DIR}/role-worker1/SKILL.md"
+send "multiagent:0.2" "こんにちは。あなたはworker2です（Main Process担当）。@${INSTRUCTIONS_DIR}/worker2.md と @${INSTRUCTIONS_DIR}/worker.md に従ってください。重要: boss1から具体的な指示が来るまでは待機してください（通信確認の返答のみOK）。"
+send "multiagent:0.2" "@${SKILLS_DIR}/role-worker2/SKILL.md"
+send "multiagent:0.3" "こんにちは。あなたはworker3です（Shared Types/QA担当）。@${INSTRUCTIONS_DIR}/worker3.md と @${INSTRUCTIONS_DIR}/worker.md に従ってください。重要: boss1から具体的な指示が来るまでは待機してください（通信確認の返答のみOK）。"
+send "multiagent:0.3" "@${SKILLS_DIR}/role-worker3/SKILL.md"
 
 echo "✅ bootstrap 完了"

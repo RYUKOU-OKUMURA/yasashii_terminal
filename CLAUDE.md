@@ -2,6 +2,48 @@
 
 このファイルはClaude Codeがプロジェクトを理解し、適切に開発を進めるためのルートエージェント定義です。
 
+## オーケストレーション（このプロジェクトの回し方）
+
+前提: Claude Code は起動時にこの `CLAUDE.md` を読み、ここに書かれた運用モデルに従って動きます。
+
+### 役割（tmux常駐チーム: PRESIDENT → boss1 → worker1-3）
+
+- **PRESIDENT**: ユーザー目的を「成功条件」として定義し、スコープ/優先度/品質ゲートを決め、boss1に委譲する
+- **boss1**: タスク分解・依存関係整理・並行化・統合を担当し、workerへ割り当てて成果をPRESIDENTへ報告する
+- **worker1**: Renderer/UI（体験・操作・見た目・ショートカット）
+- **worker2**: Main Process（IPC/実行/永続化/セキュリティ/エラー処理）
+- **worker3**: Shared Types/QA（型契約、回帰観点、手動テスト手順、リリース観点）
+
+役割指示書（tmux起動時に投入）:
+- `./.ai-team/multiagent/instructions/president.md`
+- `./.ai-team/multiagent/instructions/boss.md`
+- `./.ai-team/multiagent/instructions/worker.md`（共通）
+- `./.ai-team/multiagent/instructions/worker1.md`
+- `./.ai-team/multiagent/instructions/worker2.md`
+- `./.ai-team/multiagent/instructions/worker3.md`
+
+運用スクリプト:
+- 起動: `./.ai-team/multiagent/start.sh`
+- 役割投入: `./.ai-team/multiagent/bootstrap.sh`
+- 指示送信: `./.ai-team/multiagent/agent-send.sh`
+
+### 起動直後のルール（重要）
+
+- **ユーザーから具体的な依頼が来るまでは、PRESIDENTはboss1/workerへ勝手に作業指示を送らず待機**する（挨拶/疎通確認のみOK）
+- boss1/workerも、上位から具体指示が来るまで待機する
+
+### Interface First（契約 → 実装）
+
+Main/Rendererが絡む変更は、まず「契約（型/IF）」を確定してから実装します。
+
+1. worker3（またはshared担当）が **型/IPC契約案** を作る（入力・出力・失敗時）
+2. boss1が契約を確定し、worker1/2へ実装タスクとして配る
+3. worker1（UI）とworker2（Main）で並列実装し、boss1が統合してPRESIDENTへ報告する
+
+### サブエージェント（Claude Code Task用 / `.claude/agents`）
+
+必要に応じて、Claude Code のサブエージェント（`.claude/agents/*`）へルーティングして作業を分担します（詳細は後述）。
+
 ## プロジェクト概要
 
 「やさしいターミナル」は、AI CLI（Claude Code / Codex / Gemini CLI）を日本語で直感的に操作できるElectronベースのデスクトップアプリケーションです。
@@ -40,8 +82,14 @@
 ## ディレクトリ構成
 
 ```
-yasashii_terminal/
+mulch_Editor/
 ├── CLAUDE.md                    # このファイル（ルートエージェント）
+├── .ai-team/                    # tmuxマルチエージェント運用
+│   └── multiagent/
+│       ├── start.sh
+│       ├── bootstrap.sh
+│       ├── agent-send.sh
+│       └── instructions/
 ├── .claude/                     # Claude設定・サブエージェント定義
 │   └── agents/
 │       ├── dev-coordinator.md       # 開発コーディネーター（タスク振り分け・進捗管理）
@@ -51,41 +99,48 @@ yasashii_terminal/
 ├── app/
 │   ├── main/                    # Electronメインプロセス
 │   │   ├── main.ts
-│   │   ├── ipc-handlers.ts
-│   │   ├── runner/
+│   │   ├── runner/              # CLI実行
 │   │   │   ├── ai-runner.ts
 │   │   │   └── shell-runner.ts
-│   │   ├── command-parser/
-│   │   │   ├── index.ts
-│   │   │   ├── alias-resolver.ts
-│   │   │   ├── pattern-matcher.ts
-│   │   │   └── presets/
-│   │   │       └── ja-commands.json
-│   │   └── stores/
-│   │       ├── settings-store.ts
-│   │       └── history-store.ts
+│   │   └── command-parser/      # 日本語コマンド等（未実装の領域がある前提）
 │   ├── preload/
-│   │   └── preload.ts
+│   │   ├── preload.ts
+│   │   └── preload.types.ts
 │   ├── renderer/
 │   │   ├── App.tsx
+│   │   ├── main.tsx
 │   │   ├── components/
-│   │   │   ├── Layout/
-│   │   │   ├── Editor/
-│   │   │   ├── Output/
-│   │   │   ├── CommandBar/
-│   │   │   └── Settings/
+│   │   ├── hooks/
 │   │   ├── stores/
 │   │   └── styles/
 │   └── shared/
-│       └── types/
-├── tests/
-│   ├── unit/
-│   └── e2e/
+│       └── types/               # IPC/Renderer等の型契約
+│           ├── index.ts
+│           ├── ipc.ts
+│           ├── presets.ts
+│           ├── renderer.ts
+│           └── store.ts
 ├── package.json
 ├── tsconfig.json
 ├── vite.config.ts
 └── biome.json
 ```
+
+---
+
+## 品質ゲート（最低限の完了条件）
+
+変更を「完了」とみなすために、最低限以下を満たします（タスクに応じて取捨選択）。
+
+- **契約の整合**: Main↔Renderer間の型/契約が `app/shared/types/` にあり、破壊的変更があれば明記されている
+- **セキュリティ**: preload経由のみで通信し、危険APIを露出しない（`contextIsolation: true`, `nodeIntegration: false`）
+- **エラー設計**: 失敗時の挙動（ユーザー通知/ログ/復帰）を決めている
+- **実行確認**: 最低限の手動テスト手順が用意されている（worker3が用意するのが基本）
+
+ローカルで可能なら:
+- `npm run lint`
+- `npm run typecheck`
+- `npm test`
 
 ---
 
@@ -132,7 +187,7 @@ yasashii_terminal/
 
 ### TypeScript
 - `strict: true` を有効化
-- `any` の使用は原則禁止（やむを得ない場合は `// eslint-disable-next-line` でコメント）
+- `any` の使用は原則禁止（やむを得ない場合は Biome の抑制コメントで理由を添える）
 - 型は `app/shared/types/` に集約
 - インターフェースは `I` プレフィックスを付けない（例: `Settings`, not `ISettings`）
 
