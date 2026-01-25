@@ -1,108 +1,52 @@
-# セットアップガイド（mulch_Editor / やさしいターミナル）
+# マルチエージェント起動ガイド（tmux + Claude Code）
 
-このリポジトリで **tmux + Claude Code** を「PRESIDENT + チーム（boss1/worker1-3）」として同時稼働させる手順です。
-
-## 0. 前提（ここだけ先に確認）
-
-- macOS / Linux
-- `tmux` が使える（`tmux -V`）
-- Claude Code CLI が使える（`claude` が実行できる）
-
----
-
-## 1. 最短（コピペ用）
-
-### ① 起動（作成→起動→役割投入→PRESIDENTに入る）
-
+## 最短スタート
 ```bash
 ./.ai-team/multiagent/start.sh
 ```
 
-起動後は、**PRESIDENTは待機**します（ユーザーがPRESIDENTへ指示を出すまで、勝手にboss/workerへ作業指示を飛ばしません）。
+- `president` セッションに自動でアタッチします
+- 起動直後は **誰にも自動送信しません**（起動のみ）
+- PRESIDENT へのメッセージはユーザーが手動で入力します
 
-PRESIDENTに入力する例:
-
-```text
-あなたはpresidentです。
-要件定義_完成版.md を前提に、次の機能を実装してください: （ここに依頼内容）
-```
-
-### ② 4ペイン（boss/worker）側に入る（必要なら）
-
+## よく使うオプション
 ```bash
-tmux attach-session -t multiagent
-```
+# boss/worker側を先に見る
+./.ai-team/multiagent/start.sh --attach multiagent
 
-### ③ PRESIDENT側に入る（戻りたいとき）
-
-```bash
-tmux attach-session -t president
-```
-
-### ④ 手動で疎通確認（任意）
-
-```bash
-./.ai-team/multiagent/agent-send.sh boss1 "ping"
-```
-
-### ⑤ 進捗確認（任意）
-
-```bash
-./.ai-team/multiagent/project-status.sh
-```
-
----
-
-## 2. 分解実行（必要なときだけ）
-
-「全部まとめて」ではなく、段階ごとに叩きたい場合のコピペです。
-
-### ① tmuxセッション作成 → ② 全ペイン起動 → ③ 役割プロンプト投入
-
-```bash
-./.ai-team/multiagent/setup.sh
-./.ai-team/multiagent/launch-agents.sh --yes
+# 役割プロンプトを手動で投入する
 ./.ai-team/multiagent/bootstrap.sh
+
+# president画面だけ開きたい
+tmux attach-session -t president
+
+# 起動直後に役割プロンプトを投入する（必要なときだけ）
+./.ai-team/multiagent/start.sh --bootstrap
+./.ai-team/multiagent/start.sh --bootstrap --bootstrap-delay 5
+
+# 起動コマンドを差し替える
+./.ai-team/multiagent/start.sh --cmd "claude --dangerously-skip-permissions"
 ```
 
----
+## 主要スクリプト
+- `./.ai-team/multiagent/setup.sh` : tmux セッションを作成
+- `./.ai-team/multiagent/launch-agents.sh` : 各ペインで Claude Code を起動
+- `./.ai-team/multiagent/bootstrap.sh` : 役割プロンプト投入（boss/workerのみ）
+- `./.ai-team/multiagent/agent-send.sh` : メッセージ送信
+- `./.ai-team/multiagent/project-status.sh` : 簡易ステータス
 
-## 3. よく使うコマンド（コピペ用）
-
-### エージェント一覧
+## 送信例
 ```bash
-./.ai-team/multiagent/agent-send.sh --list
+./.ai-team/multiagent/agent-send.sh boss1 "あなたはboss1です。タスクを分解してください。"
 ```
 
-### ボスに指示を送る（例）
-```bash
-./.ai-team/multiagent/agent-send.sh boss1 "要件定義_完成版.md を前提にタスク分解してworkerへ割り当てて"
-```
+## 完了フラグ
+作業完了時に以下を作成します（任意）:
+- `./.ai-team/multiagent/tmp/worker1_done.txt`
+- `./.ai-team/multiagent/tmp/worker2_done.txt`
+- `./.ai-team/multiagent/tmp/worker3_done.txt`
 
-### 全部リセット（tmuxセッションを作り直す）
-```bash
-./.ai-team/multiagent/setup.sh
-```
-
----
-
-## 4. もし動かないとき（後回しでOK）
-
-### A) セッションが無い / 変な状態
-```bash
-tmux ls
-./.ai-team/multiagent/setup.sh
-```
-
-### B) メッセージが届かない（tmuxターゲットの問題）
-```bash
-./.ai-team/multiagent/agent-send.sh boss1 "ping"
-```
-
-### C) “自動で指示が飛ばない”（PRESIDENTが委譲しない）
-PRESIDENTに以下を貼ってください:
-
-```text
-あなたはpresidentです。@.ai-team/multiagent/instructions/president.md に従ってください。
-boss1/workerへは必ず ./.ai-team/multiagent/agent-send.sh を使って指示を送ってください。
-```
+## 参照
+- `./CLAUDE.md`（プロジェクト全体の方針）
+- `./.ai-team/multiagent/instructions/`（役割指示書）
+- `./.ai-team/tmux.conf`（tmuxのローカル設定）

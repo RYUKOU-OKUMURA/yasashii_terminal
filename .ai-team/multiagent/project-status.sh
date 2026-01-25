@@ -1,46 +1,42 @@
 #!/usr/bin/env bash
-
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TMP_DIR="$SCRIPT_DIR/tmp"
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
-echo "=================================="
-echo "mulch_Editor - Multi-Agent Status"
-echo "現在時刻: $(date +%Y/%m/%d' '%H:%M:%S)"
-echo "=================================="
+printf "==================================\n"
+printf "Multiagent status\n"
+printf "Time: %s\n" "$(date '+%Y/%m/%d %H:%M:%S')"
+printf "==================================\n"
 
-echo -e "\n【tmuxセッション】"
+printf "\n[Session]\n"
 if tmux has-session -t president 2>/dev/null; then
-  echo "president: ✅"
+  printf "president: OK\n"
 else
-  echo "president: ❌"
+  printf "president: missing\n"
 fi
-
 if tmux has-session -t multiagent 2>/dev/null; then
-  echo "multiagent: ✅"
+  printf "multiagent: OK\n"
 else
-  echo "multiagent: ❌"
+  printf "multiagent: missing\n"
 fi
 
-echo -e "\n【チーム進捗状況】"
-if [ -f "$TMP_DIR/worker1_done.txt" ]; then
-  echo "Worker1 (renderer/UI): ✅ 完了"
+printf "\n[Workers]\n"
+if [ -f "$SCRIPT_DIR/tmp/worker1_done.txt" ]; then
+  printf "worker1: done\n"
 else
-  echo "Worker1 (renderer/UI): 🔄 作業中"
+  printf "worker1: in progress\n"
 fi
 
-if [ -f "$TMP_DIR/worker2_done.txt" ]; then
-  echo "Worker2 (main process): ✅ 完了"
+if [ -f "$SCRIPT_DIR/tmp/worker2_done.txt" ]; then
+  printf "worker2: done\n"
 else
-  echo "Worker2 (main process): 🔄 作業中"
+  printf "worker2: in progress\n"
 fi
 
-if [ -f "$TMP_DIR/worker3_done.txt" ]; then
-  echo "Worker3 (shared types / QA): ✅ 完了"
+if [ -f "$SCRIPT_DIR/tmp/worker3_done.txt" ]; then
+  printf "worker3: done\n"
 else
-  echo "Worker3 (shared types / QA): 🔄 作業中"
+  printf "worker3: in progress\n"
 fi
 
-echo -e "\n=================================="
-
+printf "\n==================================\n"

@@ -1,90 +1,83 @@
 #!/usr/bin/env bash
-
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
-usage() {
-  cat << EOF
+show_usage() {
+  cat <<'MSG'
 Usage:
-  $0 [--cmd "<command>"] [--attach president|multiagent|none] [--no-bootstrap] [--bootstrap-delay <seconds>]
+  ./.ai-team/multiagent/start.sh [options]
 
-Examples:
-  $0
-  $0 --attach multiagent
-  $0 --no-bootstrap
-EOF
+Options:
+  --attach president|multiagent|none   Attach target (default: president)
+  --bootstrap                          Send role prompts after launch (default: off)
+  --bootstrap-delay <seconds>          Delay before bootstrap (default: 2)
+  --cmd "<command>"                    Command to run in each pane (default: claude --dangerously-skip-permissions)
+  -h, --help                           Show this help
+MSG
 }
 
-AGENT_CMD="${AGENT_CMD:-claude --dangerously-skip-permissions}"
-ATTACH="president"
-BOOTSTRAP=true
-BOOTSTRAP_DELAY="2"
+attach_target="president"
+run_bootstrap=false
+bootstrap_delay=2
+cmd="claude --dangerously-skip-permissions"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --cmd)
-      if [[ $# -lt 2 ]]; then
-        echo "❌ --cmd requires an argument"
-        exit 2
-      fi
-      AGENT_CMD="$2"
+    --attach)
+      attach_target="$2"
       shift 2
       ;;
-    --attach)
-      if [[ $# -lt 2 ]]; then
-        echo "❌ --attach requires an argument"
-        exit 2
-      fi
-      ATTACH="$2"
-      shift 2
+    --bootstrap)
+      run_bootstrap=true
+      shift
       ;;
     --no-bootstrap)
-      BOOTSTRAP=false
+      run_bootstrap=false
       shift
       ;;
     --bootstrap-delay)
-      if [[ $# -lt 2 ]]; then
-        echo "❌ --bootstrap-delay requires an argument"
-        exit 2
-      fi
-      BOOTSTRAP_DELAY="$2"
+      bootstrap_delay="$2"
+      shift 2
+      ;;
+    --cmd)
+      cmd="$2"
       shift 2
       ;;
     -h|--help)
-      usage
+      show_usage
       exit 0
       ;;
     *)
-      echo "❌ Unknown arg: $1"
-      usage
-      exit 2
+      echo "Unknown option: $1"
+      show_usage
+      exit 1
       ;;
   esac
 done
 
+case "$attach_target" in
+  president|multiagent|none) ;;
+  *)
+    echo "Invalid --attach value: $attach_target"
+    exit 1
+    ;;
+esac
+
 "$SCRIPT_DIR/setup.sh"
+"$SCRIPT_DIR/launch-agents.sh" --yes --cmd "$cmd"
 
-AGENT_CMD="$AGENT_CMD" "$SCRIPT_DIR/launch-agents.sh" --yes
-
-if [[ "$BOOTSTRAP" = true ]]; then
-  "$SCRIPT_DIR/bootstrap.sh" --delay "$BOOTSTRAP_DELAY" || true
+if [ "$run_bootstrap" = true ]; then
+  "$SCRIPT_DIR/bootstrap.sh" --delay "$bootstrap_delay"
 fi
 
-case "$ATTACH" in
+case "$attach_target" in
   president)
-    exec tmux attach-session -t president
+    tmux attach-session -t president
     ;;
   multiagent)
-    exec tmux attach-session -t multiagent
+    tmux attach-session -t multiagent
     ;;
   none)
-    echo "✅ Started. Attach with:"
-    echo "  tmux attach-session -t president"
-    echo "  tmux attach-session -t multiagent"
-    ;;
-  *)
-    echo "❌ Unknown attach target: $ATTACH"
-    exit 2
     ;;
 esac

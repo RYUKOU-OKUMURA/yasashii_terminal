@@ -332,3 +332,5 @@ Phase 4: 統合レビュー
 - [要件定義_完成版.md](要件定義_完成版.md)
 - [アーキテクチャ_完成版.md](アーキテクチャ_完成版.md)
 - [技術スタック_完成版.md](技術スタック_完成版.md)
+- [.ai-team/SETUP_GUIDE.md](.ai-team/SETUP_GUIDE.md)
+- [.ai-team/MULTIAGENT_SETUP_NOTES.md](.ai-team/MULTIAGENT_SETUP_NOTES.md)
